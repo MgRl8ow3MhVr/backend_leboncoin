@@ -1,6 +1,9 @@
-{\rtf1\ansi\ansicpg1252\cocoartf1671
-{\fonttbl}
-{\colortbl;\red255\green255\blue255;}
-{\*\expandedcolortbl;;}
-\margl1440\margr1440\vieww10800\viewh8400\viewkind0
-}
+- creer un fichier gitignore. avec '.' car il est cache
+- Creer un repo sur GitHub
+  Commandes a executer dans le dossier du projet
+  '''bash
+  git init
+  git add .
+  git commit -m "message"
+  '''
+- publier sur github
