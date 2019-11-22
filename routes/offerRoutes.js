@@ -1,6 +1,16 @@
 //Router Creation
 const express = require("express");
 const router = express.Router();
+
+require("dotenv").config();
+// Cloudinary import
+const cloudinary = require("cloudinary");
+cloudinary.config({
+  cloud_name: "pierredev",
+  api_key: process.env.COULDINARY_APIKEY,
+  api_secret: process.env.COULDINARY_APISECRETKEY
+});
+
 //Export du module
 module.exports = router;
 
@@ -20,6 +30,8 @@ const User = require("../models/User");
 const authenticate = async (req, res, next) => {
   console.log("starting user authentification for pulblishing");
   const auth = req.headers.authorization;
+  console.log(req.headers.authorization);
+
   if (!auth) {
     res.status(401).json({
       error: "Missing Authorization Header"
@@ -53,7 +65,7 @@ router.post("/publish", authenticate, async (req, res) => {
     // Get fields
     const { title, description, price } = req.fields;
 
-    //Get user infos
+    // Get user infos
     const token = req.headers.authorization.split(" ")[1];
     const user = await User.findOne({ token });
 
@@ -61,13 +73,24 @@ router.post("/publish", authenticate, async (req, res) => {
     const fileKeys = Object.keys(req.files);
     if (fileKeys.length === 0) {
       console.log("no photos");
-      return;
+      // res.json({ message: "NO PHOTO" });
+      // return;
     }
     fileKeys.forEach(fileKey => {
       const file = req.files[fileKey];
-      // ...
+      console.log("photo", fileKey, file.name);
+      cloudinary.v2.uploader.upload(file.path, (error, result) => {
+        if (error) {
+          return res.json({ error: `Upload Error` });
+        } else {
+          console.log(result);
+          console.log(result.secure_url);
+          return res.json(result);
+        }
+      });
     });
 
+    //Build a new Offer object and save it into db
     const offer = new Offer({
       title: title,
       description: description,

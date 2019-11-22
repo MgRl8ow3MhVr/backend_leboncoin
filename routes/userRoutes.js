@@ -60,6 +60,7 @@ router.post("/user/signup", async (req, res) => {
 // # # # # # # # # # # # # LOGIN ATTEMPT # # # # # # # # #
 router.post("/login", async (req, res) => {
   try {
+    console.log("login attempt");
     const user = await User.findOne({ email: req.fields.email });
     //if user not found
     if (!user) {
