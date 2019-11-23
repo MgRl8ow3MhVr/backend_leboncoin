@@ -5,7 +5,7 @@ const Offer = mongoose.model("Offer", {
   description: { type: String, requiered: true },
   price: { type: String, requiered: true },
   created: { type: String },
-  pictures: { type: String },
+  pictures: { type: Object },
   creator: { type: Object }
 });
 

@@ -25,8 +25,7 @@ const User = require("../models/User");
 
 // # # # # # # # # # # # # UPLOAD PRODUCT # # # # # # # # #
 
-// MiddleWare function to check
-
+// MiddleWare function to check token reveibed before publishing
 const authenticate = async (req, res, next) => {
   console.log("starting user authentification for pulblishing");
   const auth = req.headers.authorization;
@@ -58,7 +57,36 @@ const authenticate = async (req, res, next) => {
   return next();
 };
 
-router.post("/publish", authenticate, async (req, res) => {
+const cloudThePhotos = (req, res, next) => {
+  const fileKeys = Object.keys(req.files);
+  if (fileKeys.length === 0) {
+    console.log("no photos to upload");
+    return next();
+  }
+  console.log("we detected", fileKeys.length, "photos to upload on cloudinary");
+  let URLsArr = [];
+
+  fileKeys.forEach(fileKey => {
+    const file = req.files[fileKey];
+    console.log("filekey", fileKey, "photo", file.name, file.path);
+
+    cloudinary.v2.uploader.upload(file.path, (error, result) => {
+      if (error) {
+        // return res.json({ error: `Upload Error` });
+        URLsArr.push("error");
+      } else {
+        console.log(` OK cloudinary - ${fileKey}`);
+        URLsArr.push(result.secure_url);
+        if (URLsArr.length === fileKeys.length) {
+          req.pictures = URLsArr;
+          return next();
+        }
+      }
+    });
+  });
+};
+
+router.post("/publish", authenticate, cloudThePhotos, async (req, res) => {
   try {
     console.log("publishing attempt");
 
@@ -69,34 +97,14 @@ router.post("/publish", authenticate, async (req, res) => {
     const token = req.headers.authorization.split(" ")[1];
     const user = await User.findOne({ token });
 
-    //Get Photo Files
-    const fileKeys = Object.keys(req.files);
-    if (fileKeys.length === 0) {
-      console.log("no photos");
-      // res.json({ message: "NO PHOTO" });
-      // return;
-    }
-    fileKeys.forEach(fileKey => {
-      const file = req.files[fileKey];
-      console.log("photo", fileKey, file.name);
-      cloudinary.v2.uploader.upload(file.path, (error, result) => {
-        if (error) {
-          return res.json({ error: `Upload Error` });
-        } else {
-          console.log(result);
-          console.log(result.secure_url);
-          return res.json(result);
-        }
-      });
-    });
-
     //Build a new Offer object and save it into db
     const offer = new Offer({
       title: title,
       description: description,
       price: price,
       created: "MAINTENANT !",
-      creator: { account: user.account, _id: user._id }
+      creator: { account: user.account, _id: user._id },
+      pictures: req.pictures
     });
     await offer.save();
     console.log("publishing successful");
