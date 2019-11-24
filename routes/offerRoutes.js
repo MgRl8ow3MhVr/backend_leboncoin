@@ -1,7 +1,6 @@
 //Router Creation
 const express = require("express");
 const router = express.Router();
-
 require("dotenv").config();
 // Cloudinary import
 const cloudinary = require("cloudinary");
@@ -112,5 +111,24 @@ router.post("/publish", authenticate, cloudThePhotos, async (req, res) => {
   } catch (e) {
     console.error(e.message); //
     res.status(400).json({ message: "an error occured" });
+  }
+});
+
+router.get("/offer/with-count", async (req, res) => {
+  try {
+    console.log("get offers", req.query.skip, req.query.limit);
+    const paramsQuery = {};
+    paramsQuery.title = new RegExp(req.query.title, "i");
+
+    let offers = await Offer.find(paramsQuery);
+    const count = Object.keys(offers).length;
+
+    offers = await Offer.find(paramsQuery)
+      .skip(Number(req.query.skip))
+      .limit(Number(req.query.limit));
+    res.json({ count, offers: offers });
+  } catch (e) {
+    console.error(e.message); // error affiches en rouge - console.warn en jaune
+    res.status(400).json({ message: "an error occured here" });
   }
 });
