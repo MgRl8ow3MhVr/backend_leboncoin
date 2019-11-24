@@ -23,8 +23,10 @@ const Offer = require("../models/Offer");
 const User = require("../models/User");
 
 // # # # # # # # # # # # # UPLOAD PRODUCT # # # # # # # # #
+// # # # # # # # # # # # # UPLOAD PRODUCT # # # # # # # # #
+// # # # # # # # # # # # # UPLOAD PRODUCT # # # # # # # # #
 
-// MiddleWare function to check token reveibed before publishing
+// # # # # # # MiddleWare function to check token reveibed before publishing
 const authenticate = async (req, res, next) => {
   console.log("starting user authentification for pulblishing");
   const auth = req.headers.authorization;
@@ -56,6 +58,8 @@ const authenticate = async (req, res, next) => {
   return next();
 };
 
+// # # # # # # MiddleWare to upload photos on Cloudinary
+
 const cloudThePhotos = (req, res, next) => {
   const fileKeys = Object.keys(req.files);
   if (fileKeys.length === 0) {
@@ -84,6 +88,7 @@ const cloudThePhotos = (req, res, next) => {
     });
   });
 };
+// # # # # # # Actual publish route
 
 router.post("/publish", authenticate, cloudThePhotos, async (req, res) => {
   try {
@@ -101,7 +106,6 @@ router.post("/publish", authenticate, cloudThePhotos, async (req, res) => {
       title: title,
       description: description,
       price: price,
-      created: "MAINTENANT !",
       creator: { account: user.account, _id: user._id },
       pictures: req.pictures
     });
@@ -114,9 +118,17 @@ router.post("/publish", authenticate, cloudThePhotos, async (req, res) => {
   }
 });
 
+// # # # # # # # # # # # # GET ALL OFFERS # # # # # # # # #
+// # # # # # # # # # # # # GET ALL OFFERS # # # # # # # # #
+// # # # # # # # # # # # # GET ALL OFFERS # # # # # # # # #
+
 router.get("/offer/with-count", async (req, res) => {
   try {
-    console.log("get offers", req.query.skip, req.query.limit);
+    console.log(
+      "all offers requested skip/limit",
+      req.query.skip,
+      req.query.limit
+    );
     const paramsQuery = {};
     paramsQuery.title = new RegExp(req.query.title, "i");
 
@@ -127,6 +139,23 @@ router.get("/offer/with-count", async (req, res) => {
       .skip(Number(req.query.skip))
       .limit(Number(req.query.limit));
     res.json({ count, offers: offers });
+  } catch (e) {
+    console.error(e.message); // error affiches en rouge - console.warn en jaune
+    res.status(400).json({ message: "an error occured here" });
+  }
+});
+
+// # # # # # # # # # # # # GET ONE OFFER BY ID # # # # # # # # #
+// # # # # # # # # # # # # GET ONE OFFER BY ID # # # # # # # # #
+// # # # # # # # # # # # # GET ONE OFFER BY ID # # # # # # # # #
+
+router.get("/oneoffer/:id", async (req, res) => {
+  try {
+    console.log("one offer requested - id", req.params.id);
+
+    let offer = await Offer.findById(req.params.id);
+    console.log(offer);
+    res.json(offer);
   } catch (e) {
     console.error(e.message); // error affiches en rouge - console.warn en jaune
     res.status(400).json({ message: "an error occured here" });
